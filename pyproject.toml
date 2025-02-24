@@ -1,0 +1,26 @@
+[build-system]
+requires = ['setuptools', 'setuptools_scm', 'wheel']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = "remote-app-launcher"
+dependencies = ["fastapi", "uvicorn"]
+dynamic = ['version']
+
+[tool.setuptools_scm]
+write_to = "src/ral/_version.py"
+
+[tool.setuptools.dynamic]
+version = { attr = "ral._version.version" }
+
+[tool.isort]
+force_single_line = true
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 79
+
+[tool.ruff]
+line-length = 79

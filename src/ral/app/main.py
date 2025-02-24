@@ -1,8 +1,10 @@
 import platform
+import shutil
 import subprocess
 from contextlib import asynccontextmanager
 from logging import getLogger
 from pathlib import Path
+from typing import Literal
 
 import psutil
 import uvicorn
@@ -29,6 +31,27 @@ app = FastAPI(root_path="/fastapi", lifespan=lifespan)
 async def get_os() -> str:
     os = platform.system()
     return os
+
+
+@app.get("/disk-usage/")
+async def get_disk_usage(
+    unit: Literal["KB", "MB", "GB"] = Query()
+) -> JSONResponse:
+    match unit:
+        case "KB":
+            unit_val = 1024
+        case "MB":
+            unit_val = 1024**2
+        case "GB":
+            unit_val = 1024**3
+    disk_usage = shutil.disk_usage("/")
+    return JSONResponse(
+        {
+            "total": disk_usage.total / unit_val,
+            "used": disk_usage.used / unit_val,
+            "free": disk_usage.free / unit_val,
+        }
+    )
 
 
 @app.post("/run-command/")

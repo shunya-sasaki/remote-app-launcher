@@ -7,6 +7,10 @@ name = "remote-app-launcher"
 dependencies = ["fastapi", "uvicorn"]
 dynamic = ['version']
 
+[project.scripts]
+run-start = "ral.app.main:run"
+run-dev = "ral.app.main:dev"
+
 [tool.setuptools_scm]
 write_to = "src/ral/_version.py"
 

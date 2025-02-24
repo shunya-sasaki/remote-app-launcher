@@ -1,13 +1,17 @@
 import platform
+import subprocess
 from contextlib import asynccontextmanager
 from logging import getLogger
 from pathlib import Path
 
+import psutil
 import uvicorn
 from fastapi import FastAPI
+from fastapi import Query
+from fastapi.responses import JSONResponse
 
-from ral.utils.logging import CustomLogging
 from ral.io import ConfigReader
+from ral.utils.logging import CustomLogging
 
 config = ConfigReader.read_config()
 
@@ -25,6 +29,44 @@ app = FastAPI(root_path="/fastapi", lifespan=lifespan)
 async def get_os() -> str:
     os = platform.system()
     return os
+
+
+@app.post("/run-command/")
+async def run_command(
+    command: str,
+    cwd: str = Query(
+        default=".",
+        description="Working directory where the command will be executed.",
+    ),
+):
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    pid = process.pid
+    response = JSONResponse(content={"pid": pid})
+    return response
+
+
+@app.post("/kill-process/")
+async def kill_process(pid: int = Query(..., description="Process ID")):
+    try:
+        if psutil.pid_exists(pid):
+            process = psutil.Process(pid)
+            process.kill()
+            responce = JSONResponse(
+                content={"message": f"Succesfully killed process {pid}."}
+            )
+        else:
+            responce = JSONResponse(
+                content={"message": f"Process {pid} does not exist."}
+            )
+        return responce
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 def start():
